@@ -1,12 +1,15 @@
 package com.pds.my_events.Service;
 
 import com.pds.my_events.Exception.ResourceNotFoundException;
+import com.pds.my_events.Mapper.UserMapper;
 import com.pds.my_events.Model.User;
 import com.pds.my_events.Repository.UserRepository;
+import com.pds.my_events.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -14,29 +17,31 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream().map(UserMapper::toDTO).collect(   Collectors.toList());
     }
 
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserDTO createUser(UserDTO userDTO) {
+        User user = UserMapper.toEntity(userDTO);
+        User savedUser = userRepository.save(user);
+        return UserMapper.toDTO(savedUser);
     }
 
-    public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
-    }
-
-    public User updateUser(Long id, User userDetails) {
+    public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+        return UserMapper.toDTO(user);
+    }
 
-        user.setName(userDetails.getName());
-        user.setBirthDate(userDetails.getBirthDate());
-        user.setCPF(userDetails.getCPF());
-        user.setEnrollment(userDetails.getEnrollment());
-        user.setEmail(userDetails.getEmail());
-        user.setPassword(userDetails.getPassword());
-
-        return userRepository.save(user);
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+        user.setName(userDTO.getName());
+        user.setBirthDate(userDTO.getBirthDate());
+        user.setCPF(userDTO.getCpf());
+        user.setEnrollment(userDTO.getEnrollment());
+        user.setEmail(userDTO.getEmail());
+        User updatedUser = userRepository.save(user);
+        return UserMapper.toDTO(updatedUser);
     }
 
     public void deleteUser(Long id) {

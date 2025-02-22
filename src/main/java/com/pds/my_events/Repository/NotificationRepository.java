@@ -1,12 +1,12 @@
 package com.pds.my_events.Repository;
 
-import com.pds.my_events.Model.Certificate;
+import com.pds.my_events.Model.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface CertificateRepository extends JpaRepository<Certificate, Long> {
-    List<Certificate> findAllByUserId(Long userId);
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    List<Notification> findByUserId(Long userId);
 }

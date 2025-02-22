@@ -1,10 +1,9 @@
 package com.pds.my_events.Controller;
 
 import com.pds.my_events.Exception.ResourceNotFoundException;
+import com.pds.my_events.Mapper.EventMapper;
+import com.pds.my_events.dto.EventDTO;
 import com.pds.my_events.Model.Event;
-import com.pds.my_events.Model.User;
-import com.pds.my_events.Repository.UserRepository;
-import com.pds.my_events.Repository.EventRepository;
 import com.pds.my_events.Service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,31 +11,35 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/events")
 public class EventController {
 
     @Autowired
-    private EventRepository eventRepository;
-
-    @Autowired
     private EventService eventService;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents() {
+    public ResponseEntity<List<EventDTO>> getAllEvents() {
         List<Event> events = eventService.getAllEvents();
-        return ResponseEntity.ok(events);
+        List<EventDTO> eventDTOs = events.stream().map(EventMapper::toDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(eventDTOs);
     }
 
+    @GetMapping("/organizer/{organizerId}")
+    public List<EventDTO> getEventsByOrganizer(@PathVariable Long organizerId) {
+        return eventService.getEventsByOrganizer(organizerId);
+    }
+
+
     @PostMapping("/{userId}")
-    public ResponseEntity<Event> createEvent(@PathVariable Long userId, @RequestBody Event event) {
+    public ResponseEntity<EventDTO> createEvent(@PathVariable Long userId, @RequestBody EventDTO eventDTO) {
         try {
+            Event event = EventMapper.toEntity(eventDTO);
             Event createdEvent = eventService.createEvent(userId, event);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
+            EventDTO createdEventDTO = EventMapper.toDTO(createdEvent);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdEventDTO);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -44,18 +47,22 @@ public class EventController {
     }
 
     @GetMapping("/{userId}/{id}")
-    public Event getEventById(@PathVariable Long userId, @PathVariable Long id) {
-        return eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event not found with id " + id));
+    public ResponseEntity<EventDTO> getEventById(@PathVariable Long userId, @PathVariable Long id) {
+        Event event = eventService.getEventById(id);
+        EventDTO eventDTO = EventMapper.toDTO(event);
+        return ResponseEntity.ok(eventDTO);
     }
 
     @PutMapping("/{userId}/{id}")
-    public ResponseEntity<Event> updateEvent(
+    public ResponseEntity<EventDTO> updateEvent(
             @PathVariable Long userId,
             @PathVariable Long id,
-            @RequestBody Event eventDetails) {
+            @RequestBody EventDTO eventDetailsDTO) {
 
+        Event eventDetails = EventMapper.toEntity(eventDetailsDTO);
         Event updatedEvent = eventService.updateEvent(userId, id, eventDetails);
-        return ResponseEntity.ok(updatedEvent);
+        EventDTO updatedEventDTO = EventMapper.toDTO(updatedEvent);
+        return ResponseEntity.ok(updatedEventDTO);
     }
 
     @DeleteMapping("/{userId}/{id}")
