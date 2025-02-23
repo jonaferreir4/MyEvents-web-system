@@ -11,7 +11,8 @@ public class UserMapper {
                 user.getBirthDate(),
                 user.getCPF(),
                 user.getEnrollment(),
-                user.getEmail()
+                user.getEmail(),
+                user.getPassword()
         );
     }
 
@@ -23,6 +24,7 @@ public class UserMapper {
         user.setCPF(userDTO.getCpf());
         user.setEnrollment(userDTO.getEnrollment());
         user.setEmail(userDTO.getEmail());
+        user.setPassword(userDTO.getPassword());
         return user;
     }
 }

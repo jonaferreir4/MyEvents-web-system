@@ -17,4 +17,5 @@ public class UserDTO    {
     private String cpf;
     private int enrollment;
     private String email;
+    private String password;
 }

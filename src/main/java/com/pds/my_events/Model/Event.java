@@ -17,7 +17,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Event implements Publisher {
+public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,65 +47,4 @@ public class Event implements Publisher {
             inverseJoinColumns = @JoinColumn(name = "sponsor_id")
     )
     private Set<Sponsor> sponsors;
-
-    @Transient
-    private Set<User> observers = new HashSet<>();
-
-    public void setInitDate(LocalDate initDate) {
-        this.initDate = initDate;
-        notifyObservers("A data inicial do evento mudou: " + initDate);
-    }
-
-    public void setFinalDate(LocalDate finalDate) {
-        this.finalDate = finalDate;
-        notifyObservers("A data final do evento mudou: " + finalDate);
-    }
-
-    public void setLocal(String local) {
-        this.local = local;
-        notifyObservers("O local do evento mudou:  " + local);
-
-    }
-
-    public void setModality(String modality) {
-        this.modality = modality;
-        notifyObservers("A modalidade do evento mudou:  " + modality);
-
-    }
-
-    @Override
-    public void addObserver(User observer) {
-        observers.add(observer);
-    }
-
-    @Override
-    public void removeObserver(User observer) {
-        observers.remove(observer);
-    }
-
-
-    @Override
-    public void notifyObservers(String message) {
-        Iterator<User> iterator = observers.iterator();
-        while (iterator.hasNext()) {
-            User observer = iterator.next();
-            observer.update(new Notification(message, getLatestParticipation(observer)));
-        }
-    }
-
-    public Participation getLatestParticipation(User observer) {
-        return participations.stream()
-                .filter(p -> p.getUser().equals(observer))
-                .findFirst()
-                .orElse(null);
-    }
-
-    public void loadObservers() {
-        Set<User> newObservers = new HashSet<>();
-        for (Participation participation : participations) {
-            newObservers.add(participation.getUser());
-        }
-        observers.clear();
-        observers.addAll(newObservers);
-    }
 }
