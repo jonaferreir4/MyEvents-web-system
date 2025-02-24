@@ -4,20 +4,26 @@ import com.pds.my_events.Model.Event;
 import com.pds.my_events.Model.Notification;
 import com.pds.my_events.Model.Participation;
 import com.pds.my_events.Model.User;
+import com.pds.my_events.Observer.Publisher;
 import com.pds.my_events.Repository.EventRepository;
 import com.pds.my_events.Repository.NotificationRepository;
 import com.pds.my_events.Repository.ParticipationRepository;
 import com.pds.my_events.Repository.UserRepository;
+import io.micrometer.observation.Observation;
+import org.apache.tomcat.util.modeler.NotificationInfo;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.ObjectError;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
-public class NotificationService {
+public class NotificationService  implements Publisher {
+
+
+    private List<User> observers = new ArrayList<>();
 
     @Autowired
     private UserRepository userRepository;
@@ -31,6 +37,7 @@ public class NotificationService {
     @Autowired
     private ParticipationRepository participationRepository;
 
+    /*
     @Transactional
     public void notify(Long userId, Long eventId, Long participationId,Notification notification) {
 
@@ -48,11 +55,12 @@ public class NotificationService {
                 user.update(notification);
                 notification.setParticipation(participation);
                 notification.setUser(user);
-                notificationRepository.save(notification);
-                userRepository.save(user);
+
             }
         }
     }
+
+     */
 
 
     public List<Notification> getAllNotificationsByUserId(Long userId) {
@@ -60,7 +68,7 @@ public class NotificationService {
         // Inicializa as relações LAZY manualmente
         for (Notification notification : notifications) {
             Hibernate.initialize(notification.getUser());
-            Hibernate.initialize(notification.getParticipation());
+            Hibernate.initialize(notification.getEvent());
         }
         return notifications;
     }
@@ -80,5 +88,38 @@ public class NotificationService {
         } else {
             throw new IllegalArgumentException("Notification not found with id " + id);
         }
+    }
+
+    @Transactional
+    private void persistence(ArrayList<Notification> notifications) {
+        notificationRepository.saveAll(notifications);
+        userRepository.saveAll(observers);
+    }
+
+
+
+
+    @Override
+    public void addObserver(User observer) {
+        this.observers.add(observer);
+    }
+
+
+    @Override
+    public void notifyObservers(String message, Event event) {
+      var  notificationsSended = new ArrayList<Notification>();
+
+
+        for (User observer : new ArrayList<>(observers)) {
+            Notification notification = new Notification();
+            notification.setEvent(event);
+            notification.setMessage(message);
+
+            notification.setUser(observer);
+            observer.update(notification);
+            notificationsSended.add(notification);
+
+        }
+        persistence(notificationsSended);
     }
 }

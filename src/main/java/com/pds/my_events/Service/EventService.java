@@ -86,12 +86,9 @@ public class EventService {
 
         for (Participation participation : participationsCopy) {
             User user = participation.getUser();
-            Notification notification = new Notification();
-            notification.setUser(user);
-            notification.setParticipation(participation);
-            notification.setMessage("O evento '" + event.getName() + "' foi atualizado.");
-            notificationService.notify(user.getId(), event.getId(), participation.getId(), notification);
+            notificationService.addObserver(user);
         }
+        notificationService.notifyObservers("O evento: " + event.getName() + "Foi atualizado!", event);
 
 
         // Salva o evento atualizado

@@ -12,7 +12,7 @@ public class NotificationMapper {
         return new NotificationDTO(
                 notification.getId(),
                 notification.getUser().getId(),
-                notification.getParticipation().getId(),
+                notification.getEvent().getId(),
                 notification.getMessage()
         );
     }
